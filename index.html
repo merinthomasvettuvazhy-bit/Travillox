@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c73be"><link rel="manifest" href="manifest.json"><link rel="icon" href="icons/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icons/icon-192.png"><title>Travillox Urban Sense · BMTC Bengaluru</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<style>
+:root{--bg:#f3f6fb;--panel:#fff;--text:#14213d;--muted:#5b667a;--line:#dde3ee;--acc:#1c73be;--map:#e6edf7;--road:#fff;--roadl:#cfd9e8;--chip:#eaf2fb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1322;--panel:#131d33;--text:#e8eefc;--muted:#93a0bb;--line:#26344f;--acc:#4da3ee;--map:#0f1a2e;--road:#22314d;--roadl:#2c3d5e;--chip:#1b2a47}}
+:root[data-theme="dark"]{--bg:#0b1322;--panel:#131d33;--text:#e8eefc;--muted:#93a0bb;--line:#26344f;--acc:#4da3ee;--map:#0f1a2e;--road:#22314d;--roadl:#2c3d5e;--chip:#1b2a47}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0}h1 span{color:var(--acc)}.sub{font-size:12px;color:var(--muted)}
+.live{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--chip)}.live i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;animation:p 1.4s infinite}
+@keyframes p{50%{opacity:.3}}
+main{padding:14px 16px;max-width:1280px;margin:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-size:24px}.kpi small{color:var(--muted)}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+button,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:12px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.layers{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;margin-bottom:8px;color:var(--muted)}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--muted);margin-top:6px}.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.row{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:pointer}
+.row:hover,.row.sel{border-color:var(--acc)}.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--chip);white-space:nowrap}
+.sev-Critical{color:#ef4444;font-weight:600}.sev-High{color:#f59e0b;font-weight:600}.sev-Medium{color:#ca8a04}.sev-Low{color:var(--muted)}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;margin:8px 0}.dl dt{color:var(--muted)}.dl dd{margin:0}
+.fun{display:flex;gap:3px;margin:8px 0}.fun span{flex:1;text-align:center;font-size:10px;padding:4px 2px;border-radius:6px;background:var(--chip);color:var(--muted)}.fun span.on{background:var(--acc);color:#fff}
+h3{margin:0 0 8px;font-size:14px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.bar{display:flex;align-items:center;gap:8px;font-size:12px;margin:5px 0}.bar em{flex:none;width:96px;font-style:normal;color:var(--muted)}.bar div{height:10px;border-radius:5px;background:var(--acc)}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:99px;font-size:13px;opacity:0;transition:.3s;pointer-events:none}
+.note{font-size:11px;color:var(--muted);margin-top:10px}
+.ic{background:none;border:none}.evm{width:22px;height:22px;border-radius:50%;border:2px solid #fff;display:grid;place-items:center;font:700 11px system-ui;color:#111;box-shadow:0 1px 4px #0006}.evm.crit{animation:pu 1.6s infinite}@keyframes pu{50%{box-shadow:0 0 0 9px #ef444455}}.evm.sel{outline:3px solid var(--text)}
+.busm{padding:1px 5px;border-radius:5px;border:1.5px solid #fff;color:#fff;font:700 10px system-ui;white-space:nowrap;text-align:center}
+#lmap{height:540px;border-radius:10px;overflow:hidden;z-index:0}.leaflet-container{background:var(--map)}
+.hb{height:8px;width:140px;border-radius:4px;display:inline-block;background:linear-gradient(90deg,#2563eb,#22c55e,#facc15,#f97316,#dc2626)}
+.layers select{padding:2px 6px}.layers label{display:flex;align-items:center;gap:4px}
+.inv .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}
+</style></head><body>
+<header><div><h1>Travillox <span>Urban Sense</span></h1><div class="sub">BMTC Bengaluru · AI mobile urban intelligence from bus cameras · SIH 2026 · problem statement by Bharat Electronics Limited (BEL)</div></div>
+<div style="display:flex;gap:8px;align-items:center"><span class="live"><i></i><span id="nb"></span> buses online</span><button id="sim">+ Simulate edge detection</button></div></header>
+<main>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs"></div>
+<div class="grid"><section id="view"></section>
+<aside><div class="card" id="detail"></div><div class="card" id="edge" style="margin-top:12px"></div></aside></div>
+<p class="note">Demo data: BMTC route numbers and terminals are real; paths are approximate (snapped to roads), and all events, delays, plates and counts are simulated. Not live BMTC data.</p>
+</main><div id="toast"></div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const T={pothole:{n:'Pothole',g:'defects',c:'#f59e0b',i:'P'},damage:{n:'Damaged road',g:'defects',c:'#f59e0b',i:'D'},water:{n:'Waterlogging',g:'defects',c:'#38bdf8',i:'W'},divider:{n:'Missing road divider',g:'infra',c:'#eab308',i:'V'},zebra:{n:'Missing zebra crossing',g:'infra',c:'#eab308',i:'Z'},sign:{n:'Damaged signboard',g:'infra',c:'#eab308',i:'S'},ped:{n:'School children crossing',g:'safety',c:'#a855f7',i:'K'},hit:{n:'Hit-and-run',g:'safety',c:'#ef4444',i:'!'},rash:{n:'Rash driving',g:'safety',c:'#ef4444',i:'R'}};
+const ST=['Reported','Acknowledged','In progress','Resolved'];
+const now=Date.now();
+let EV=[
+['pothole',1,.55,'High',.93,'333-12',7,0,50],['pothole',3,.3,'Medium',.88,'342F-05',3,1,300],['damage',2,.4,'High',.9,'K1-03',5,2,900],
+['water',4,.7,'Critical',.95,'500CF-09',9,1,20],['divider',0,.3,'Medium',.84,'335E-07',2,0,1500],['zebra',2,.2,'High',.86,'K1-03',4,0,2100],
+['sign',5,.15,'Low',.8,'KIAS-9-02',2,0,2600],['ped',0,.8,'Critical',.92,'335E-14',1,0,8],['hit',3,.65,'Critical',.91,'342F-05',1,0,14],
+['rash',4,.9,'High',.87,'500CF-09',1,1,75],['pothole',5,.5,'Medium',.89,'KIAS-9-02',6,0,3000],['water',1,.12,'High',.9,'333-04',4,2,420]
+].map((a,i)=>({id:'EV-'+(1001+i),type:a[0],r:a[1],f:a[2],sev:a[3],conf:a[4],bus:a[5],seen:a[6],st:a[7],t:now-a[8]*60000,plate:a[0]=='hit'?'KA 05 MN 4821':a[0]=='rash'?'KA 01 AB 7730':null,pc:a[0]=='hit'?.91:.84}));
+const gps=e=>e.lat.toFixed(5)+', '+e.lng.toFixed(5);
+// Routes: real Bengaluru waypoints (snapped to roads via OSRM when online). hot = [position 0-1, strength] congestion hotspots
+const ROUTES=[
+{n:'335E',name:'Kempegowda Bus Stn–Kadugodi',c:'#1c73be',hot:[[.35,.7],[.62,.9]],w:[[12.9774,77.5726,'Kempegowda Bus Station (Majestic)'],[12.9784,77.6408,'Indiranagar'],[12.9917,77.7156,'Hoodi'],[12.9961,77.7608,'Kadugodi']]},
+{n:'333',name:'Kempegowda Bus Stn–Marathahalli Br.',c:'#10b981',hot:[[.45,.5],[.85,.95]],w:[[12.9774,77.5726,'Kempegowda Bus Station (Majestic)'],[12.9609,77.6387,'Domlur'],[12.9569,77.7011,'Marathahalli Bridge']]},
+{n:'K1',name:'Central Silk Board–Peenya',c:'#e11d48',hot:[[.06,1],[.5,.6]],w:[[12.9177,77.6233,'Central Silk Board'],[12.9774,77.5726],[13.0285,77.5409],[13.0289,77.5206,'Peenya Satellite Bus Station']]},
+{n:'342F',name:'Sarjapura–Kempegowda Bus Stn',c:'#f59e0b',hot:[[.4,.9],[.7,.6]],w:[[12.8581,77.7869,'Sarjapura Bus Station'],[12.9260,77.6762],[12.9352,77.6245],[12.9774,77.5726,'Kempegowda Bus Station (Majestic)']]},
+{n:'500CF',name:'Banashankari TTMC–Sarjapura',c:'#8b5cf6',hot:[[.3,1],[.55,.8]],w:[[12.9154,77.5737,'Banashankari TTMC'],[12.9166,77.6101],[12.9260,77.6762],[12.8581,77.7869,'Sarjapura Bus Station']]},
+{n:'KIAS-9',name:'Kempegowda Bus Stn–Airport',c:'#0891b2',hot:[[.25,.85],[.45,.5]],w:[[12.9774,77.5726,'Kempegowda Bus Station (Majestic)'],[13.0358,77.5970,'Hebbal'],[13.1007,77.5963,'Yelahanka'],[13.1989,77.7068,'Kempegowda Intl Airport']]}];
+let sel=null,tab='map',layers={defects:1,infra:1,safety:1,buses:1,stops:1,mode:'cong'},filt='all',buses=[];
+// ---- map (Leaflet + OpenStreetMap + heat layer)
+const SEV={Critical:1,High:.8,Medium:.5,Low:.25};
+let map,mapDiv,gEv,gBus,gRoute,gStop,heat,base=[],pings=[];
+const prep=r=>{r.cum=[0];for(let i=1;i<r.pts.length;i++){const a=r.pts[i-1],b=r.pts[i];r.cum.push(r.cum[i-1]+Math.hypot(b[0]-a[0],(b[1]-a[1])*.974))}r.len=r.cum[r.cum.length-1]};
+const at=(r,f)=>{const d=f*r.len;let i=1;while(i<r.cum.length-1&&r.cum[i]<d)i++;const a=r.pts[i-1],b=r.pts[i],s=(d-r.cum[i-1])/((r.cum[i]-r.cum[i-1])||1);return[a[0]+(b[0]-a[0])*s,a[1]+(b[1]-a[1])*s]};
+const jam=(r,f)=>Math.min(1,.12+r.hot.reduce((s,h)=>s+h[1]*Math.exp(-(((f-h[0])/.07)**2)),0));
+function place(){EV.forEach(e=>{if(e.r!=null){const p=at(ROUTES[e.r],e.f);e.lat=p[0];e.lng=p[1]}});base=[];
+ ROUTES.forEach(r=>{for(let f=0;f<=1;f+=.01){const p=at(r,f),w=jam(r,f);base.push([p[0],p[1],w],[p[0]+Math.sin(f*977)*.0005,p[1]+Math.cos(f*977)*.0005,w*.8])}})}
+function drawRoutes(){gRoute.clearLayers();gStop.clearLayers();ROUTES.forEach(r=>{L.polyline(r.pts,{color:r.c,weight:4,opacity:.75}).addTo(gRoute).bindTooltip('BMTC '+r.n+' '+r.name,{sticky:true});
+ r.w.forEach(p=>{if(p[2])L.circleMarker([p[0],p[1]],{radius:5,color:r.c,weight:3,fillColor:'#fff',fillOpacity:1}).addTo(gStop).bindTooltip(p[2]+' · '+r.n)})})}
+async function snap(){for(const r of ROUTES){try{const c=new AbortController();setTimeout(()=>c.abort(),7000);
+ const u='https://router.project-osrm.org/route/v1/driving/'+r.w.map(p=>p[1]+','+p[0]).join(';')+'?overview=full&geometries=geojson';
+ const j=await(await fetch(u,{signal:c.signal})).json();if(j.routes&&j.routes[0]){r.pts=j.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);prep(r)}}catch(e){}}
+ place();drawRoutes();drawEv();setHeat();detail()}
+function drawEv(){gEv.clearLayers();EV.filter(e=>layers[T[e.type].g]&&e.lat!=null).forEach(e=>{const t=T[e.type];
+ L.marker([e.lat,e.lng],{icon:L.divIcon({className:'ic',html:`<div class="evm ${e.sev=='Critical'&&e.st<3?'crit':''} ${e.id==sel?'sel':''}" style="background:${t.c};opacity:${e.st==3?.45:1}">${t.i}</div>`,iconSize:[22,22],iconAnchor:[11,11]}),zIndexOffset:e.id==sel?900:300}).addTo(gEv).on('click',()=>select(e.id)).bindTooltip(t.n+' · '+e.sev)})}
+// Heat points = [lat,lng,weight 0-1]. Congestion = route jam profile + live pings from slow buses; defects/safety = severity-weighted event clusters
+function hp(){const m=layers.mode;if(m=='cong')return base.concat(pings);const g=m=='def'?['defects','infra']:['safety'],o=[];
+ EV.filter(e=>g.includes(T[e.type].g)&&e.st<3&&e.lat!=null).forEach(e=>{const w=Math.min(1,SEV[e.sev]*(1+Math.min(e.seen,6)/10));o.push([e.lat,e.lng,w]);for(let k=0;k<3;k++)o.push([e.lat+Math.sin(k*2.4+e.lat*1e4)*.0006,e.lng+Math.cos(k*2.4+e.lng*1e4)*.0006,w*.6])});return o}
+function setHeat(){if(!heat)heat=L.heatLayer([],{radius:26,blur:22,maxZoom:15,max:1,gradient:{.2:'#2563eb',.4:'#22c55e',.6:'#facc15',.8:'#f97316',1:'#dc2626'}});
+ if(layers.mode=='off'){if(map.hasLayer(heat))map.removeLayer(heat)}else{heat.setLatLngs(hp());if(!map.hasLayer(heat))heat.addTo(map)}}
+function exportHeat(){const m=layers.mode=='off'?'cong':layers.mode,s=layers.mode;layers.mode=m;const rows=hp();layers.mode=s;
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['lat,lng,weight\n'+rows.map(r=>r.map(v=>+v.toFixed(5)).join(',')).join('\n')],{type:'text/csv'}));a.download='heatmap_'+m+'.csv';a.click();toast('Heat map points exported (CSV)')}
+let last=performance.now();
+function loop(n){const dt=Math.min((n-last)/1000,.2);last=n;buses.forEach(b=>{const j=jam(b.r,b.f);b.f=(b.f+.012*Math.max(.15,1.15-j)*dt)%1;const p=at(b.r,b.f);b.lat=p[0];b.lng=p[1];b.m.setLatLng(p);
+ b.pt+=dt;if(b.pt>1.5){b.pt=0;if(j>.35){pings.push([p[0],p[1],j]);if(pings.length>500)pings.shift()}}});requestAnimationFrame(loop)}
+const dk=()=>{const t=document.documentElement.dataset.theme;return t=='dark'||(t!='light'&&matchMedia('(prefers-color-scheme:dark)').matches)};
+// Basemaps: OpenStreetMap by default, key-free Esri as fallbacks. Auto-falls back to the next provider if tiles fail to load.
+// MapTiler: set your key + custom map id here. Restrict the key to your site origins in the MapTiler dashboard (Keys > Allowed HTTP origins).
+const MT_KEY='xtGVoTN4yqyQpzLrWjNt',MT_MAP='019e5ebb-a6e5-7bb6-a25a-ba7fdfcd1009',MT_ATTR='&copy; MapTiler &copy; OpenStreetMap contributors';
+const PROV={
+ mt:()=>['https://api.maptiler.com/maps/'+MT_MAP+'/256/{z}/{x}/{y}.png?key='+MT_KEY,{maxNativeZoom:20,attribution:MT_ATTR}],
+ mtstd:()=>['https://api.maptiler.com/maps/'+(dk()?'dataviz-dark':'streets-v2')+'/256/{z}/{x}/{y}.png?key='+MT_KEY,{maxNativeZoom:20,attribution:MT_ATTR}],
+ gray:()=>[(dk()?'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base':'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base')+'/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:16,attribution:'Tiles &copy; Esri'}],
+ street:()=>['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:19,attribution:'Tiles &copy; Esri'}],
+ osm:()=>['https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,attribution:'&copy; OpenStreetMap contributors'}]};
+const ORDER=['mt','mtstd','osm','gray','street'];let tl,te=0,curBase='mt';
+function setBase(k){curBase=k;mapDiv.classList.toggle('inv',k=='osm'&&dk());if(tl)map.removeLayer(tl);const p=PROV[k]();tl=L.tileLayer(p[0],Object.assign({maxZoom:19},p[1])).addTo(map);te=0;
+ tl.on('tileerror',()=>{if(++te==4){const n=ORDER[ORDER.indexOf(k)+1];if(n){toast('Basemap unavailable, switching to '+n);setBase(n);const e=document.getElementById('bm');if(e)e.value=n}else toast('Map tiles blocked or offline. Serve the app over http://localhost or HTTPS.')}})}
+// A blocked OSM tile ("Access blocked") is a valid image, so <img> never reports an error. Probe each provider with fetch() and read the HTTP status instead.
+async function pickBase(){if(location.protocol=='file:')toast('Opened from disk: serve via http://localhost for map tiles');
+ for(const k of ORDER){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),4500);
+  const r=await fetch(PROV[k]()[0].replace('{s}','a').replace('{z}',12).replace('{x}',2930).replace('{y}',1896),{signal:c.signal});clearTimeout(t);
+  if(r.ok){if(k!=curBase){setBase(k);const e=document.getElementById('bm');if(e)e.value=k;toast('Using '+k+' basemap')}return}}catch(e){}}
+ toast('No basemap reachable (blocked or offline). Events and heat map still work.')}
+function init(){mapDiv=document.createElement('div');mapDiv.id='lmap';map=L.map(mapDiv).setView([13.02,77.65],10);
+ setBase('mt');pickBase();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>setBase(curBase));
+ gRoute=L.layerGroup().addTo(map);gStop=L.layerGroup().addTo(map);gEv=L.layerGroup().addTo(map);gBus=L.layerGroup().addTo(map);
+ ROUTES.forEach(r=>{r.pts=r.w;prep(r)});place();drawRoutes();
+ ['335E-07','333-12','K1-03','342F-05','500CF-09','KIAS-9-02','335E-14','333-04'].forEach((id,i)=>{const r=ROUTES[i%6];buses.push({id,r,f:Math.random(),pt:0,m:L.marker(at(r,0),{icon:L.divIcon({className:'ic',html:`<div class="busm" style="background:${r.c}">${id}</div>`,iconSize:[56,16],iconAnchor:[28,8]}),zIndexOffset:500}).addTo(gBus)})});
+ document.getElementById('nb').textContent=buses.length;render();edge();snap();requestAnimationFrame(loop);setInterval(setHeat,2500)}
+// ---- views
+const sevO={Critical:0,High:1,Medium:2,Low:3};
+const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' min ago':Math.round(m/60)+' h ago'};
+function kpis(){const o=EV.filter(e=>e.st<3);document.getElementById('kpis').innerHTML=[['Events detected',EV.length,'last 48 h'],['Open critical',o.filter(e=>e.sev=='Critical').length,'need action < 72 h'],['Road defects open',o.filter(e=>T[e.type].g=='defects').length,'potholes, damage, water'],['Avg route delay','+6.2 min','peak hour, fleet-wide'],['Edge uplink saved','≈99%','events only, no raw video']].map(k=>`<div class="card kpi"><small>${k[0]}</small><b>${k[1]}</b><small>${k[2]}</small></div>`).join('')}
+function tabs(){document.getElementById('tabs').innerHTML=[['map','Live GIS map'],['alerts','Alerts & incidents'],['an','Analytics']].map(t=>`<button class="${tab==t[0]?'on':''}" onclick="tab='${t[0]}';render()">${t[1]}</button>`).join('')}
+function legend(){return '<div class="legend">'+Object.values(T).map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('')+'</div>'}
+function vMap(){const v=document.getElementById('view');
+ v.innerHTML='<div class="card"><div class="layers" id="ly"></div><div id="mw"></div><div class="legend" style="align-items:center"><span>Heat intensity</span><span class="hb"></span><span>low → high</span></div>'+legend()+'<div class="legend">'+ROUTES.map(r=>`<span><i style="background:${r.c}"></i>BMTC ${r.n} ${r.name}</span>`).join('')+'</div></div>';
+ document.getElementById('ly').innerHTML=[['defects','Road defects'],['infra','Infrastructure'],['safety','Safety & incidents'],['stops','Stops & terminals'],['buses','Fleet']].map(l=>`<label><input type="checkbox" ${layers[l[0]]?'checked':''} data-l="${l[0]}"> ${l[1]}</label>`).join('')+'<label>Heat map: <select id="hm"><option value="cong">Congestion</option><option value="def">Road defects & infrastructure</option><option value="saf">Safety incidents</option><option value="off">Off</option></select></label><label>Basemap: <select id="bm"><option value="mt">MapTiler (custom)</option><option value="mtstd">MapTiler Streets</option><option value="osm">OpenStreetMap</option><option value="gray">Light/Dark gray (Esri)</option><option value="street">Streets (Esri)</option></select></label><button id="ex" style="padding:2px 8px;font-size:12px">Export CSV</button>';
+ document.querySelectorAll('#ly input').forEach(i=>i.onchange=()=>{layers[i.dataset.l]=i.checked?1:0;applyLayers()});
+ const hm=document.getElementById('hm');hm.value=layers.mode;hm.onchange=()=>{layers.mode=hm.value;setHeat()};document.getElementById('ex').onclick=exportHeat;const bs=document.getElementById('bm');bs.value=curBase;bs.onchange=()=>setBase(bs.value);
+ document.getElementById('mw').appendChild(mapDiv);map.invalidateSize();applyLayers()}
+function applyLayers(){drawEv();setHeat();layers.buses?map.addLayer(gBus):map.removeLayer(gBus);layers.stops?map.addLayer(gStop):map.removeLayer(gStop)}
+function vAlerts(){const list=EV.filter(e=>filt=='all'||T[e.type].g==filt).sort((a,b)=>sevO[a.sev]-sevO[b.sev]||b.t-a.t);
+ document.getElementById('view').innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">Verified events & incident reports</h3><select id="f"><option value="all">All</option><option value="defects">Road defects</option><option value="infra">Infrastructure</option><option value="safety">Safety & incidents</option></select></div>`+
+ list.map(e=>`<div class="row ${e.id==sel?'sel':''}" onclick="select('${e.id}')"><span class="dot" style="background:${T[e.type].c}"></span><div style="flex:1"><b>${T[e.type].n}</b> <span class="sev-${e.sev}">${e.sev}</span><div class="sub">${e.id} · ${e.bus} · ${ago(e.t)} · ${e.seen} sighting${e.seen>1?'s':''}</div></div><span class="tag">${ST[e.st]}</span></div>`).join('')+'</div>';
+ const f=document.getElementById('f');f.value=filt;f.onchange=()=>{filt=f.value;vAlerts()}}
+function bars(rows,max,unit,col){return rows.map(r=>`<div class="bar"><em>${r[0]}</em><div style="width:${r[1]/max*100*.6}%;background:${col||'var(--acc)'}"></div><span>${r[1]}${unit||''}</span></div>`).join('')}
+function vAn(){const hrs=[8,5,4,4,6,14,32,58,86,70,52,48,55,50,46,52,64,88,96,78,55,38,24,14],mx=100;
+ const pts=hrs.map((v,i)=>`${10+i*(280/23)},${110-v/mx*95}`).join(' ');
+ const def={};EV.forEach(e=>def[T[e.type].n]=(def[T[e.type].n]||0)+1);
+ document.getElementById('view').innerHTML=`<div class="two">
+ <div class="card"><h3>Estimated route delay (peak)</h3>${bars([['335E Kadugodi',7.4],['333 Marathahalli',9.1],['K1 Silk Board–Peenya',8.3],['342F Sarjapura',10.2],['500CF Banashankari',6.6],['KIAS-9 Airport',4.1]],12,' min','#e11d48')}<div class="sub">Computed from bus GPS vs scheduled running time.</div></div>
+ <div class="card"><h3>Vehicle density by hour</h3><svg viewBox="0 0 300 130"><polyline points="${pts}" fill="none" stroke="var(--acc)" stroke-width="2.5"/><line x1="10" x2="290" y1="110" y2="110" stroke="var(--line)"/><text x="10" y="125" font-size="9" fill="var(--muted)">0h</text><text x="140" y="125" font-size="9" fill="var(--muted)">12h</text><text x="270" y="125" font-size="9" fill="var(--muted)">23h</text></svg><div class="sub">Detected, classified and counted by edge AI (cars, two-wheelers, trucks, autos).</div></div>
+ <div class="card"><h3>Infrastructure deficiencies</h3>${bars(Object.entries(def),4,'','#f59e0b')}</div>
+ <div class="card"><h3>Origin–destination flows</h3>${bars([['Majestic → Kadugodi',1840],['Majestic → Marathahalli',1620],['Sarjapura → Majestic',1380],['Silk Board → Peenya',1210],['Majestic → Airport',990]],2000,'','#10b981')}<div class="sub">Trips inferred from fleet movement and boarding data.</div></div></div>`}
+function render(){tabs();kpis();({map:vMap,alerts:vAlerts,an:vAn})[tab]();detail()}
+// ---- detail & edge
+function select(id){sel=id;detail();if(tab=='map'){drawEv();const e=EV.find(x=>x.id==id);if(e&&e.lat!=null)map.panTo([e.lat,e.lng])}else if(tab=='alerts')vAlerts()}
+function detail(){const d=document.getElementById('detail'),e=EV.find(x=>x.id==sel);
+ if(!e){d.innerHTML='<h3>Event details</h3><div class="sub">Select a marker or alert to see evidence, confidence, GPS and resolution status.</div>';return}
+ const t=T[e.type],ev=e.plate?`<svg viewBox="0 0 280 110" style="border-radius:8px;margin-top:6px"><rect width="280" height="110" fill="#1b2433"/><rect y="75" width="280" height="35" fill="#2b3548"/><rect x="85" y="38" width="110" height="50" rx="8" fill="#6b7a99"/><rect x="95" y="68" width="56" height="14" rx="2" fill="#f5f1d0"/><text x="123" y="79" text-anchor="middle" font-size="9" font-weight="700" fill="#111">${e.plate}</text><rect x="80" y="32" width="120" height="62" fill="none" stroke="#ef4444" stroke-width="2"/><text x="82" y="26" font-size="9" fill="#ef4444">vehicle ${(e.pc+.04).toFixed(2)} · plate ${e.pc.toFixed(2)}</text></svg>`:'';
+ d.innerHTML=`<h3><span class="dot" style="background:${t.c};display:inline-block;margin-right:6px"></span>${t.n}</h3><div class="sub">${e.id} · <span class="sev-${e.sev}">${e.sev}</span></div>${ev}
+ <dl class="dl"><dt>Confidence</dt><dd>${Math.round(e.conf*100)}% (${e.seen} sighting${e.seen>1?'s':''})</dd><dt>Detected</dt><dd>${new Date(e.t).toLocaleString()}</dd><dt>GPS</dt><dd>${gps(e)}</dd><dt>Bus</dt><dd>${e.bus}</dd>${e.plate?`<dt>Plate</dt><dd><b>${e.plate}</b> (${Math.round(e.pc*100)}%)</dd>`:''}<dt>SLA</dt><dd>${e.sev=='Critical'||e.sev=='High'?'72 h resolution target':'Scheduled maintenance'}</dd></dl>
+ <div class="fun">${ST.map((s,i)=>`<span class="${i<=e.st?'on':''}">${s}</span>`).join('')}</div>
+ <div style="display:flex;gap:6px;flex-wrap:wrap"><button onclick="adv('${e.id}')" ${e.st==3?'disabled':''}>Advance status</button>${e.plate?`<button onclick="toast('Alert with plate, timestamp & GPS sent to command centre')">Share with command</button>`:''}</div>`}
+function adv(id){const e=EV.find(x=>x.id==id);if(e.st<3)e.st++;kpis();detail();if(tab=='map')drawEv();if(tab=='alerts')vAlerts()}
+const CAMS={Front:[[30,80,60,38,'car .97'],[130,90,48,30,'car .95'],[205,115,34,16,'pothole .93','#f59e0b']],Rear:[[80,85,70,40,'truck .96'],[190,100,40,24,'bike .91']],Left:[[20,95,40,30,'zebra missing .86','#eab308'],[120,70,32,52,'child .92','#a855f7']],Right:[[60,100,100,20,'divider gap .84','#eab308'],[200,95,55,28,'auto .94']]};
+let cam='Front';
+function edge(){const b=CAMS[cam];document.getElementById('edge').innerHTML=`<h3>Edge-AI feed · bus 333-12</h3><div class="tabs" style="margin-bottom:6px">${Object.keys(CAMS).map(c=>`<button class="${c==cam?'on':''}" style="padding:3px 9px;font-size:12px" onclick="cam='${c}';edge()">${c}</button>`).join('')}</div><svg viewBox="0 0 280 150" style="border-radius:8px"><rect width="280" height="150" fill="#1b2433"/><polygon points="0,150 280,150 190,70 90,70" fill="#2b3548"/>${b.map(o=>`<rect x="${o[0]}" y="${o[1]}" width="${o[2]}" height="${o[3]}" fill="none" stroke="${o[5]||'#22c55e'}" stroke-width="2"/><text x="${o[0]}" y="${o[1]-3}" font-size="9" fill="${o[5]||'#22c55e'}">${o[4]}</text>`).join('')}</svg><div class="sub" style="margin-top:6px">12 FPS · 38 ms/frame on-device · only geotagged event metadata (~4 KB) is uploaded.</div>`}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2600)}
+document.getElementById('sim').onclick=()=>{const b=buses[Math.floor(Math.random()*buses.length)],k=['pothole','damage','water','sign','zebra','ped','rash'],ty=k[Math.floor(Math.random()*k.length)];
+ const e={id:'EV-'+(1001+EV.length),type:ty,lat:b.lat,lng:b.lng,sev:ty=='ped'||ty=='rash'?'Critical':'High',conf:.8+Math.random()*.15,bus:b.id,seen:1,st:0,t:Date.now(),plate:ty=='rash'?'KA 03 CD '+(1000+Math.floor(Math.random()*8999)):null,pc:.82};
+ EV.push(e);toast(`${b.id} detected: ${T[ty].n}`);render();select(e.id)};
+init();
+setInterval(()=>{const c=Object.keys(CAMS);cam=c[(c.indexOf(cam)+1)%4];edge()},3500);
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script></body></html>
